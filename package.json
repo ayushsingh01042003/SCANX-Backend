@@ -1,0 +1,32 @@
+{
+  "name": "scanner",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "compile": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@google-ai/generativelanguage": "^2.6.0",
+    "@google/generative-ai": "^0.13.0",
+    "axios": "^1.7.2",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "google-auth-library": "^9.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.1",
+    "nodemailer": "^6.9.14",
+    "nodemon": "^3.1.3",
+    "octokit": "^4.0.2",
+    "splunk-sdk": "^2.0.0"
+  },
+  "type": "module"
+}

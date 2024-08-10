@@ -26,10 +26,10 @@ const port = 3000;
 app.use(express.json());
 app.use(cookieParser())
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-  ],
-  credentials: true,
+  origin: function(origin, callback) {
+    callback(null, true);
+  },
+  credentials: true
 }));
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });

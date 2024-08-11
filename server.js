@@ -19,6 +19,7 @@ import User from './models/user.model.js';
 import bcrypt from 'bcryptjs'
 import cookieParser from 'cookie-parser';
 import generateTokenAndSetCookie from './utils/generateToken.js';
+import logger from './utils/logger.js';
 dotenv.config();
 const app = express();
 const port = 3000;
@@ -54,8 +55,10 @@ app.post('/signup', async (req, res) => {
 
     if (newUser) {
       await newUser.save();
+      logger.info('User created successfully', { username });
       return res.status(200).send({ msg: `User ${newUser.username} has been created` });
     } else {
+      logger.error('Error during user creation', { username, error: err.message });
       return res.status(400).send({ msg: "Invalid user data" });
     }
   } catch (err) {
@@ -82,6 +85,7 @@ app.post('/login', async (req, res) => {
     generateTokenAndSetCookie(username, res);
     return res.status(200).send({ msg: `User ${username} logged in` });
   } catch (err) {
+    logger.error('Error during login', { username, error: err.message });
     return res.status(500).send({ msg: "Internal Server Error", error: err.message });
   }
 });
@@ -89,6 +93,7 @@ app.post('/login', async (req, res) => {
 app.get('/user', (req, res) => {
   const token = req.cookies.jwt; // Use the correct cookie name
   if (!token) {
+    logger.warn('Unauthorized access attempt');
     return res.status(401).send({ msg: 'Unauthorized' });
   }
 
@@ -103,6 +108,7 @@ app.get('/user', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie('jwt'); // Use the correct cookie name
+  logger.info('User logged out');
   res.status(200).send({ msg: 'Logged out' });
 });
 
@@ -113,8 +119,8 @@ app.post('/scan-github', async (req, res) => {
     const piiVulnerabilities = await scanGitHubRepository(owner, repo, regexPairs);
     res.json(piiVulnerabilities);
   } catch (error) {
-    console.error('Error scanning GitHub repository:', error);
-    console.error(error.stack);
+    logger.error('Error scanning GitHub repository:', error);
+    logger.error(error.stack);
     res.status(500).json({ error: 'Failed to scan GitHub repository' });
   }
 });
@@ -136,7 +142,7 @@ app.post('/scan-directory', (req, res) => {
 
     res.json(piiVulnerabilities);
   } catch (error) {
-    console.error('Error scanning directory:', error);
+    logger.error('Error scanning directory:', error);
     res.status(500).json({ error: 'Failed to scan directory', details: error.message });
   }
 });
@@ -156,7 +162,7 @@ app.post('/github-repo-stats', async (req, res) => {
     const languageStats = await analyzeGitHubRepository(owner, repo, octokit);
     res.json(languageStats);
   } catch (error) {
-    console.error('Error analyzing GitHub repository:', error);
+    logger.error('Error analyzing GitHub repository:', error);
     res.status(500).json({ error: 'Failed to analyze GitHub repository', details: error.message });
   }
 });
@@ -172,7 +178,7 @@ app.post('/local-directory-stats', async (req, res) => {
     const languageStats = await analyzeLocalDirectory(directoryPath);//extensions to be scanned are written manually right now. Try to get some fix for that
     res.json(languageStats);
   } catch (error) {
-    console.error('Error analyzing local directory:', error);
+    logger.error('Error analyzing local directory:', error);
     res.status(500).json({ error: 'Failed to analyze local directory', details: error.message });
   }
 });
@@ -184,7 +190,7 @@ app.post("/email", async (req, res) => {
     const result = await mailData(jsonData, receiverEmail)
     return res.status(200).json({ message: "Email sent successfully", result })
   } catch(err) {
-    console.error("Error sending email:", err)
+    logger.error("Error sending email:", err)
     return res.status(500).json({ error: "Unable to send email" })
   }
 })
@@ -210,6 +216,7 @@ app.get('/getAllProjects', async (req, res) => {
     
     res.json(projects);
   } catch (error) {
+    logger.error('Error fetching projects', { error: error.message });
     res.status(500).json({ message: error.message });
   }
 });
@@ -253,6 +260,7 @@ app.post('/createReport', async (req, res) => {
 
     res.status(201).json(scanReport);
   } catch (error) {
+    logger.error('Error creating report', { projectName, username, error: error.message });
     res.status(400).json({ message: error.message });
   }
 });
@@ -285,6 +293,7 @@ app.delete('/deleteProject/:projectId', async (req, res) => {
     })
 
   } catch (err) {
+    logger.error('Error deleting project', { projectId, error: err.message });
     await session.abortTransaction();
     session.endSession();
     
@@ -388,5 +397,5 @@ app.post('/gemini-chat', async (req, res) => {
 
 app.listen(port, () => {
   connectToMongoDB();
-  console.log(`Server is running on http://localhost:${port}`);
+  logger.info(`Server is running on http://localhost:${port}`);
 });
